@@ -1,0 +1,18 @@
+include MANIFEST.in
+include requirements.txt
+include *.json
+include *.md
+include *.py
+include *.txt
+recursive-include kolaljamal *.css
+recursive-include kolaljamal *.csv
+recursive-include kolaljamal *.html
+recursive-include kolaljamal *.ico
+recursive-include kolaljamal *.js
+recursive-include kolaljamal *.json
+recursive-include kolaljamal *.md
+recursive-include kolaljamal *.png
+recursive-include kolaljamal *.py
+recursive-include kolaljamal *.svg
+recursive-include kolaljamal *.txt
+recursive-exclude kolaljamal *.pyc
