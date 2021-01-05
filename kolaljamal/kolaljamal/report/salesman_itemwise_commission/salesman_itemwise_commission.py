@@ -4,25 +4,74 @@
 from __future__ import unicode_literals
 import frappe
 
+
 def execute(filters=None):
     columns, data = [], []
     return get_columns(), get_data(filters)
 
+
 def get_columns():
-    return[
-        dict(label="InvoiceNo", fieldname="invoice_no", fieldtype="Link", options="Sales Invoice", width=150),
+    return [
+        dict(
+            label="InvoiceNo",
+            fieldname="invoice_no",
+            fieldtype="Link",
+            options="Sales Invoice",
+            width=150,
+        ),
         dict(label="Date", fieldname="posting_date", fieldtype="Date", width=120),
         dict(label="Item Name", fieldname="item_name", fieldtype="Data", width=150),
-        dict(label="Item Code/Item", fieldname="item_code", fieldtype="Link/Item", width=150),
-        dict(label="Sales Amount", fieldname="base_net_total", fieldtype="Currency", width=130),
-        dict(label="Salesman Commission", fieldname="salesman_commission", fieldtype="Currency", width=150),
-        dict(label="Supervisor Commission", fieldname="supervisor_commission", fieldtype="Currency", width=150),
-        dict(label="Manager Commission", fieldname="manager_commission", fieldtype="Currency", width=150),
+        dict(
+            label="Item Code/Item",
+            fieldname="item_code",
+            fieldtype="Link/Item",
+            width=150,
+        ),
+        dict(
+            label="Sales Amount",
+            fieldname="base_net_total",
+            fieldtype="Currency",
+            width=130,
+        ),
+        dict(
+            label="Salesman Commission",
+            fieldname="salesman_commission",
+            fieldtype="Currency",
+            width=150,
+        ),
+        dict(
+            label="Supervisor Commission",
+            fieldname="supervisor_commission",
+            fieldtype="Currency",
+            width=150,
+        ),
+        dict(
+            label="Manager Commission",
+            fieldname="manager_commission",
+            fieldtype="Currency",
+            width=150,
+        ),
     ]
 
 
 def get_data(filters):
     conditions = []
+    user = frappe.session.user
+    sales_person_type = frappe.db.get_value(
+        "Sales Person", {"sales_user_id_cf": user}, "sales_person_type_cf",
+    )
+
+    if sales_person_type == "Manager":
+        filters["manager"] = user
+    elif sales_person_type == "Supervisor":
+        filters["supervisor"] = user
+    elif sales_person_type == "Salesman":
+        filters["sales_man"] = user
+    elif user == "Administrator":
+        pass
+    else:
+        conditions += ["0=1"]
+
     if filters.get("from_date"):
         conditions += ["si.posting_date >= %(from_date)s "]
     if filters.get("to_date"):
@@ -30,7 +79,8 @@ def get_data(filters):
     if filters.get("salesman"):
         conditions += ["si.salesman_cf = %(salesman)s "]
     if filters.get("supervisor"):
-        conditions += ["""
+        conditions += [
+            """
         si.salesman_cf in 
         (
             select a.name 
@@ -38,9 +88,11 @@ def get_data(filters):
             inner join `tabSales Person` b 
             on b.name = %(supervisor)s
             and a.lft > b.lft and a.rgt < b.rgt
-        )"""]
+        )"""
+        ]
     if filters.get("manager"):
-        conditions += ["""
+        conditions += [
+            """
         si.salesman_cf in 
         (
             select a.name 
@@ -48,11 +100,13 @@ def get_data(filters):
             inner join `tabSales Person` b 
             on b.name = %(manager)s 
             and a.lft > b.lft and a.rgt < b.rgt
-        )"""]
+        )"""
+        ]
 
     conditions = conditions and " where " + " and ".join(conditions) or ""
 
-    return frappe.db.sql("""
+    return frappe.db.sql(
+        """
     select
         si.name as invoice_no,
         si.posting_date,
@@ -70,4 +124,10 @@ def get_data(filters):
         inner join `tabItem` as ti
         on sit.item_code = ti.item_code
         {conditions}
-    """.format(conditions=conditions), filters, as_dict=True, debug=True)
+    """.format(
+            conditions=conditions
+        ),
+        filters,
+        as_dict=True,
+        debug=True,
+    )
