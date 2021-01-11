@@ -66,7 +66,7 @@ def get_data(filters):
     elif sales_person_type == "Supervisor":
         filters["supervisor"] = user
     elif sales_person_type == "Salesman":
-        filters["sales_man"] = user
+        filters["salesman"] = user
     elif user == "Administrator":
         pass
     else:
