@@ -68,12 +68,13 @@ def get_data(filters):
         if not sales_person:
             return []
         sales_person = sales_person[0]
+        print(sales_person)
 
-        if sales_person.sales_person_type == "Manager":
+        if sales_person.sales_person_type_cf == "Manager":
             filters["manager"] = sales_person.name
-        elif sales_person.sales_person_type == "Supervisor":
+        elif sales_person.sales_person_type_cf == "Supervisor":
             filters["supervisor"] = sales_person.name
-        elif sales_person.sales_person_type == "Salesman":
+        elif sales_person.sales_person_type_cf == "Salesman":
             filters["salesman"] = sales_person.name
         else:
             conditions += ["0=1"]
@@ -135,5 +136,5 @@ def get_data(filters):
         ),
         filters,
         as_dict=True,
-        debug=True,
+        debug=0,
     )
