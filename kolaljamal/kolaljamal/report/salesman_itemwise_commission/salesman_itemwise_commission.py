@@ -57,20 +57,26 @@ def get_columns():
 def get_data(filters):
     conditions = []
     user = frappe.session.user
-    sales_person_type = frappe.db.get_value(
-        "Sales Person", {"sales_user_id_cf": user}, "sales_person_type_cf",
-    )
 
-    if sales_person_type == "Manager":
-        filters["manager"] = user
-    elif sales_person_type == "Supervisor":
-        filters["supervisor"] = user
-    elif sales_person_type == "Salesman":
-        filters["salesman"] = user
-    elif user == "Administrator":
-        pass
-    else:
-        conditions += ["0=1"]
+    if not user == "Administrator":
+        sales_person = frappe.db.get_values(
+            "Sales Person",
+            {"sales_user_id_cf": user},
+            ["name", "sales_person_type_cf"],
+            as_dict=True,
+        )
+        if not sales_person:
+            return []
+        sales_person = sales_person[0]
+
+        if sales_person.sales_person_type == "Manager":
+            filters["manager"] = sales_person.name
+        elif sales_person.sales_person_type == "Supervisor":
+            filters["supervisor"] = sales_person.name
+        elif sales_person.sales_person_type == "Salesman":
+            filters["salesman"] = sales_person.name
+        else:
+            conditions += ["0=1"]
 
     if filters.get("from_date"):
         conditions += ["si.posting_date >= %(from_date)s "]
